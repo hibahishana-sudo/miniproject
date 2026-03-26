@@ -10,6 +10,8 @@ import couponRoutes from "./routes/coupon.route.js";
 import paymentRoutes from "./routes/payment.route.js";
 import analyticsRoutes from "./routes/analytics.route.js";
 import wishlistRoutes from "./routes/wishlist.route.js";
+import serviceRoutes from "./routes/service.route.js";
+import bookingRoutes from "./routes/booking.route.js";
 
 import { connectDB } from "./lib/db.js";
 
@@ -30,6 +32,8 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 if (process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "/frontend/dist")));
