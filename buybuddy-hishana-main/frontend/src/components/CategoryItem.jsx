@@ -1,13 +1,27 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "../lib/axios";
 
 const CategoryItem = ({ category }) => {
+	const [imgUrl, setImgUrl] = useState(category.imageUrl);
+
+	useEffect(() => {
+		const categoryName = category.href.replace("/products/", "");
+		axios.get(`/products/category/${categoryName}`)
+			.then((res) => {
+				const products = res.data.products;
+				if (products && products.length > 0) setImgUrl(products[0].image);
+			})
+			.catch(() => {});
+	}, [category.href]);
+
 	return (
 		<div className='relative overflow-hidden h-96 w-full rounded-lg group'>
 			<Link to={"/category" + category.href}>
 				<div className='w-full h-full cursor-pointer'>
 					<div className='absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 opacity-50 z-10' />
 					<img
-						src={category.imageUrl}
+						src={imgUrl}
 						alt={category.name}
 						className='w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110'
 						loading='lazy'

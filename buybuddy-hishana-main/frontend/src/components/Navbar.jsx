@@ -1,4 +1,4 @@
-import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, ShoppingBag, Search, User } from "lucide-react";
+import { ShoppingCart, UserPlus, LogIn, LogOut, Lock, ShoppingBag, Search, User, Wrench } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/useUserStore";
 import { useCartStore } from "../stores/useCartStore";
@@ -7,6 +7,7 @@ import { useState } from "react";
 const Navbar = () => {
 	const { user, logout } = useUserStore();
 	const isAdmin = user?.role === "admin";
+	const isTasker = user?.role === "tasker";
 	const { cart } = useCartStore();
 	const navigate = useNavigate();
 	const [searchQuery, setSearchQuery] = useState("");
@@ -53,12 +54,9 @@ const Navbar = () => {
 					</form>
 
 					<nav className='flex flex-wrap items-center gap-4'>
-						<Link
-							to={"/"}
-							className='text-gray-300 hover:text-emerald-400 transition duration-300
-					 ease-in-out'
-						>
-							Home
+						<Link to="/" className='text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out'>Home</Link>
+						<Link to="/services" className='flex items-center gap-1 text-gray-300 hover:text-emerald-400 transition duration-300 ease-in-out'>
+							<Wrench size={18} /><span className="hidden sm:inline">Services</span>
 						</Link>
 						{user && (
 							<Link
@@ -86,6 +84,15 @@ const Navbar = () => {
 							>
 								<Lock className='inline-block mr-1' size={18} />
 								<span className='hidden sm:inline'>Dashboard</span>
+							</Link>
+						)}
+						{isTasker && (
+							<Link
+								className='bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded-md font-medium transition duration-300 ease-in-out flex items-center'
+								to="/tasker-dashboard"
+							>
+								<Wrench className='inline-block mr-1' size={18} />
+								<span className='hidden sm:inline'>My Jobs</span>
 							</Link>
 						)}
 

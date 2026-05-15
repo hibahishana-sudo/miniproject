@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useProductStore } from "../stores/useProductStore";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "../components/ProductCard";
+import { ArrowLeft } from "lucide-react";
 
 const CategoryPage = () => {
 	const { fetchProductsByCategory, products } = useProductStore();
-
+	const navigate = useNavigate();
 	const { category } = useParams();
 
 	useEffect(() => {
@@ -17,6 +18,13 @@ const CategoryPage = () => {
 	return (
 		<div className='min-h-screen'>
 			<div className='relative z-10 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
+				<button
+					onClick={() => navigate(-1)}
+					className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-6 transition-colors"
+				>
+					<ArrowLeft size={20} />
+					<span>Back</span>
+				</button>
 				<motion.h1
 					className='text-center text-4xl sm:text-5xl font-bold text-emerald-400 mb-8'
 					initial={{ opacity: 0, y: -20 }}

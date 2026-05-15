@@ -71,6 +71,8 @@ export const login = async (req, res) => {
 		const user = await User.findOne({ email });
 
 		if (user && (await user.comparePassword(password))) {
+			if (user.role === "tasker" && user.isActive === false)
+				return res.status(403).json({ message: "Your account has been disabled by admin" });
 			const { accessToken, refreshToken } = generateTokens(user._id);
 			await storeRefreshToken(user._id, refreshToken);
 			setCookies(res, accessToken, refreshToken);
@@ -153,5 +155,37 @@ export const getProfile = async (req, res) => {
 		res.json(req.user);
 	} catch (error) {
 		res.status(500).json({ message: "Server error", error: error.message });
+	}
+};
+
+export const createTasker = async (req, res) => {
+	const { name, email, password } = req.body;
+	try {
+		if (await User.findOne({ email })) return res.status(400).json({ message: "Email already in use" });
+		const tasker = await User.create({ name, email, password, role: "tasker" });
+		res.status(201).json({ _id: tasker._id, name: tasker.name, email: tasker.email, role: tasker.role, isActive: tasker.isActive });
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+export const getTaskers = async (req, res) => {
+	try {
+		const taskers = await User.find({ role: "tasker" }).select("-password");
+		res.json(taskers);
+	} catch (error) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+export const toggleTaskerAccess = async (req, res) => {
+	try {
+		const tasker = await User.findOne({ _id: req.params.id, role: "tasker" });
+		if (!tasker) return res.status(404).json({ message: "Tasker not found" });
+		tasker.isActive = !tasker.isActive;
+		await tasker.save();
+		res.json({ _id: tasker._id, name: tasker.name, isActive: tasker.isActive });
+	} catch (error) {
+		res.status(500).json({ message: error.message });
 	}
 };

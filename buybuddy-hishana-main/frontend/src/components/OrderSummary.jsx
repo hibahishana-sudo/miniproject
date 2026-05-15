@@ -1,16 +1,18 @@
 import { motion } from "framer-motion";
 import { useCartStore } from "../stores/useCartStore";
-import { Link } from "react-router-dom";
-import { MoveRight } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { MoveRight, CreditCard, Truck } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
+import toast from "react-hot-toast";
 
 const stripePromise = loadStripe(
 	"pk_test_51T547f2KXVPQSCRBfqEij7amhlHauSPXEF0KLy6hGVqtH9sIYUW0IWtmBxvLoQgbH3KKlbdb76RFv7z7EtKnvAmi00OBYp7Fys"
 );
 
 const OrderSummary = () => {
-	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
+	const { total, subtotal, coupon, isCouponApplied, cart, clearCart } = useCartStore();
+	const navigate = useNavigate();
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
@@ -23,14 +25,31 @@ const OrderSummary = () => {
 			products: cart,
 			couponCode: coupon ? coupon.code : null,
 		});
+		const result = await stripe.redirectToCheckout({ sessionId: res.data.id });
+		if (result.error) console.error("Error:", result.error);
+	};
 
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
-
-		if (result.error) {
-			console.error("Error:", result.error);
+	const handleCod = async () => {
+		if (cart.length === 0) return toast.error("Your cart is empty");
+		try {
+			const products = cart.map((item) => ({
+				_id: item._id,
+				price: item.price,
+				quantity: item.quantity,
+				name: item.name,
+				image: item.image,
+			}));
+			const res = await axios.post("/payments/cod-order", { products });
+			await clearCart();
+			navigate("/purchase-success?type=cod", {
+				state: {
+					orderId: res.data.orderId,
+					products,
+					totalAmount: total,
+				},
+			});
+		} catch (error) {
+			toast.error(error.response?.data?.message || "Failed to place order");
 		}
 	};
 
@@ -70,12 +89,23 @@ const OrderSummary = () => {
 				</div>
 
 				<motion.button
-					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
+					className='flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}
 					onClick={handlePayment}
 				>
-					Proceed to Checkout
+					<CreditCard size={18} />
+					Pay Online
+				</motion.button>
+
+				<motion.button
+					className='flex w-full items-center justify-center gap-2 rounded-lg bg-yellow-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-4 focus:ring-yellow-300'
+					whileHover={{ scale: 1.05 }}
+					whileTap={{ scale: 0.95 }}
+					onClick={handleCod}
+				>
+					<Truck size={18} />
+					Cash on Delivery
 				</motion.button>
 
 				<div className='flex items-center justify-center gap-2'>

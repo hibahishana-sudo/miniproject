@@ -24,6 +24,11 @@ const orderSchema = new mongoose.Schema(
 					required: true,
 					min: 0,
 				},
+				status: {
+					type: String,
+					enum: ["ordered", "processing", "shipped", "out_for_delivery", "delivered"],
+					default: "ordered",
+				},
 			},
 		],
 		totalAmount: {
@@ -33,7 +38,17 @@ const orderSchema = new mongoose.Schema(
 		},
 		stripeSessionId: {
 			type: String,
-			unique: true,
+			default: null,
+		},
+		paymentMethod: {
+			type: String,
+			enum: ["online", "cod"],
+			default: "online",
+		},
+		paymentStatus: {
+			type: String,
+			enum: ["pending", "paid"],
+			default: "pending",
 		},
 	},
 	{ timestamps: true }

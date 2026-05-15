@@ -1,14 +1,134 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { ShoppingCart, Truck, RefreshCw, Star, ChevronRight, Package, Shield, Heart } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Truck, RefreshCw, Star, ChevronRight, Package, Shield, Heart, ArrowLeft } from "lucide-react";
 import { useCartStore } from "../stores/useCartStore";
 import { useUserStore } from "../stores/useUserStore";
 import { useWishlistStore } from "../stores/useWishlistStore";
 import toast from "react-hot-toast";
 import BlockchainReviews from "../components/BlockchainReviews";
 
+const getCategoryConfig = (category) => {
+	const cat = category?.toLowerCase();
+	if (cat === "shoes") {
+		return { showSizes: true, sizes: ["UK 6", "UK 7", "UK 8", "UK 9", "UK 10", "UK 11"], sizeLabel: "SELECT SIZE" };
+	}
+	if (cat === "glasses") {
+		return { showSizes: true, sizes: ["Small", "Medium", "Large"], sizeLabel: "SELECT FRAME SIZE" };
+	}
+	if (["jeans", "t-shirts", "jackets", "suits"].includes(cat)) {
+		return { showSizes: true, sizes: ["XS", "S", "M", "L", "XL", "XXL"], sizeLabel: "SELECT SIZE" };
+	}
+	return { showSizes: false, sizes: [], sizeLabel: "" };
+};
+
+const getProductDetails = (category) => {
+	const cat = category?.toLowerCase();
+	if (["jeans", "t-shirts", "jackets", "suits"].includes(cat)) {
+		return [
+			{ label: "Material", value: "Premium Cotton Blend" },
+			{ label: "Care", value: "Machine Wash" },
+			{ label: "Fit", value: "Regular Fit" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "shoes") {
+		return [
+			{ label: "Material", value: "Synthetic / Leather" },
+			{ label: "Sole", value: "Rubber" },
+			{ label: "Closure", value: "Lace-Up" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "glasses") {
+		return [
+			{ label: "Frame Material", value: "Polycarbonate" },
+			{ label: "Lens Type", value: "UV Protected" },
+			{ label: "Style", value: "Unisex" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "bags") {
+		return [
+			{ label: "Material", value: "Faux Leather" },
+			{ label: "Compartments", value: "Multiple" },
+			{ label: "Closure", value: "Zipper" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (["mobiles", "electronics", "appliances"].includes(cat)) {
+		return [
+			{ label: "Brand", value: "As per product" },
+			{ label: "Warranty", value: "1 Year Manufacturer Warranty" },
+			{ label: "Power", value: "As per specification" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "furniture") {
+		return [
+			{ label: "Material", value: "Engineered Wood" },
+			{ label: "Assembly", value: "Required" },
+			{ label: "Warranty", value: "1 Year" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "beauty") {
+		return [
+			{ label: "Type", value: "Skincare / Cosmetics" },
+			{ label: "Shelf Life", value: "24 Months" },
+			{ label: "Skin Type", value: "All Skin Types" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "toys") {
+		return [
+			{ label: "Age Group", value: "3+ Years" },
+			{ label: "Material", value: "ABS Plastic" },
+			{ label: "Safety", value: "BIS Certified" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "sports") {
+		return [
+			{ label: "Material", value: "High-Grade Polymer" },
+			{ label: "Usage", value: "Outdoor / Indoor" },
+			{ label: "Warranty", value: "6 Months" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "books") {
+		return [
+			{ label: "Format", value: "Paperback" },
+			{ label: "Language", value: "English" },
+			{ label: "Publisher", value: "As per product" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "food") {
+		return [
+			{ label: "Type", value: "Packaged Food" },
+			{ label: "Shelf Life", value: "As per packaging" },
+			{ label: "Storage", value: "Cool & Dry Place" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	if (cat === "home") {
+		return [
+			{ label: "Material", value: "As per product" },
+			{ label: "Warranty", value: "6 Months" },
+			{ label: "Usage", value: "Home & Kitchen" },
+			{ label: "Country of Origin", value: "India" },
+		];
+	}
+	return [
+		{ label: "Brand", value: "As per product" },
+		{ label: "Warranty", value: "As per product" },
+		{ label: "Country of Origin", value: "India" },
+	];
+};
+
 const ProductDetailPage = () => {
 	const { id } = useParams();
+	const navigate = useNavigate();
 	const [product, setProduct] = useState(null);
 	const [similarProducts, setSimilarProducts] = useState([]);
 	const [selectedSize, setSelectedSize] = useState("");
@@ -18,13 +138,8 @@ const ProductDetailPage = () => {
 	const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
 	const inWishlist = isInWishlist(id);
 
-	console.log("Product ID from URL:", id);
-
-	const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
-	const deliveryDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { 
-		weekday: 'short', 
-		month: 'short', 
-		day: 'numeric' 
+	const deliveryDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
+		weekday: "short", month: "short", day: "numeric",
 	});
 
 	useEffect(() => {
@@ -32,30 +147,20 @@ const ProductDetailPage = () => {
 			setLoading(true);
 			try {
 				const response = await fetch("/api/products");
-				if (!response.ok) {
-					throw new Error('Failed to fetch products');
-				}
+				if (!response.ok) throw new Error("Failed to fetch products");
 				const data = await response.json();
-				
 				if (!data.products || data.products.length === 0) {
 					setProduct(null);
 					setSimilarProducts([]);
 					return;
 				}
-				
-				const foundProduct = data.products.find(p => p._id === id);
+				const foundProduct = data.products.find((p) => p._id === id);
 				setProduct(foundProduct || null);
-
-				// Get similar products from same category
 				if (foundProduct) {
-					const similar = data.products
-						.filter(p => p.category === foundProduct.category && p._id !== id)
-						.slice(0, 4);
-					setSimilarProducts(similar);
+					setSimilarProducts(data.products.filter((p) => p.category === foundProduct.category && p._id !== id).slice(0, 4));
 				}
 			} catch (error) {
 				console.error("Error:", error);
-				// Don't show error toast, just set product to null
 				setProduct(null);
 			} finally {
 				setLoading(false);
@@ -64,35 +169,25 @@ const ProductDetailPage = () => {
 		fetchProduct();
 	}, [id]);
 
+	const categoryConfig = getCategoryConfig(product?.category);
+	const productDetails = getProductDetails(product?.category);
+
 	const handleAddToCart = () => {
-		if (!user) {
-			toast.error("Please login to add to cart");
-			return;
-		}
-		if (!selectedSize) {
-			toast.error("Please select a size");
-			return;
-		}
+		if (!user) { toast.error("Please login to add to cart"); return; }
+		if (categoryConfig.showSizes && !selectedSize) { toast.error("Please select a size"); return; }
 		addToCart(product);
 		toast.success("Added to cart!");
 	};
 
 	const handleWishlist = () => {
-		if (!user) {
-			toast.error("Please login to add to wishlist");
-			return;
-		}
-		if (inWishlist) {
-			removeFromWishlist(product._id);
-		} else {
-			addToWishlist(product);
-		}
+		if (!user) { toast.error("Please login to add to wishlist"); return; }
+		if (inWishlist) { removeFromWishlist(product._id); } else { addToWishlist(product); }
 	};
 
 	if (loading) {
 		return (
 			<div className="min-h-screen pt-20 flex justify-center items-center">
-				<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500"></div>
+				<div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-500" />
 			</div>
 		);
 	}
@@ -108,6 +203,10 @@ const ProductDetailPage = () => {
 	return (
 		<div className="min-h-screen pt-20 px-4 pb-10">
 			<div className="max-w-7xl mx-auto">
+				<button onClick={() => navigate(-1)} className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mb-4 transition-colors">
+					<ArrowLeft size={20} /><span>Back</span>
+				</button>
+
 				{/* Breadcrumb */}
 				<div className="flex items-center gap-2 text-sm text-gray-400 mb-6">
 					<Link to="/" className="hover:text-emerald-400">Home</Link>
@@ -150,44 +249,38 @@ const ProductDetailPage = () => {
 							</ul>
 						</div>
 
-						{/* Size Selection */}
-						<div>
-							<h3 className="text-white font-semibold mb-3">SELECT SIZE</h3>
-							<div className="flex gap-3">
-								{sizes.map((size) => (
-									<button
-										key={size}
-										onClick={() => setSelectedSize(size)}
-										className={`w-14 h-14 rounded-full border-2 font-semibold transition-all ${
-											selectedSize === size
-												? "border-emerald-500 bg-emerald-500 text-white"
-												: "border-gray-600 text-gray-400 hover:border-emerald-400"
-										}`}
-									>
-										{size}
-									</button>
-								))}
+						{/* Size Selection — only for relevant categories */}
+						{categoryConfig.showSizes && (
+							<div>
+								<h3 className="text-white font-semibold mb-3">{categoryConfig.sizeLabel}</h3>
+								<div className="flex flex-wrap gap-3">
+									{categoryConfig.sizes.map((size) => (
+										<button
+											key={size}
+											onClick={() => setSelectedSize(size)}
+											className={`px-4 h-12 rounded-lg border-2 font-semibold text-sm transition-all ${
+												selectedSize === size
+													? "border-emerald-500 bg-emerald-500 text-white"
+													: "border-gray-600 text-gray-400 hover:border-emerald-400"
+											}`}
+										>
+											{size}
+										</button>
+									))}
+								</div>
 							</div>
-						</div>
+						)}
 
 						{/* Action Buttons */}
 						<div className="flex gap-3">
-							<button
-								onClick={handleAddToCart}
-								className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors"
-							>
-								<ShoppingCart size={20} />
-								ADD TO CART
+							<button onClick={handleAddToCart} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors">
+								<ShoppingCart size={20} />ADD TO CART
 							</button>
 							<button
 								onClick={handleWishlist}
-								className={`p-4 rounded-lg font-semibold transition-colors ${
-									inWishlist 
-										? 'bg-red-600 hover:bg-red-700 text-white' 
-										: 'bg-gray-700 hover:bg-gray-600 text-white'
-								}`}
+								className={`p-4 rounded-lg font-semibold transition-colors ${inWishlist ? "bg-red-600 hover:bg-red-700 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}`}
 							>
-								<Heart size={20} className={inWishlist ? 'fill-white' : ''} />
+								<Heart size={20} className={inWishlist ? "fill-white" : ""} />
 							</button>
 						</div>
 
@@ -229,24 +322,14 @@ const ProductDetailPage = () => {
 				{/* Product Description */}
 				<div className="bg-gray-800 rounded-lg p-6 mb-8">
 					<h2 className="text-2xl font-bold text-white mb-4">Product Details</h2>
-					<p className="text-gray-300 leading-relaxed">{product.description}</p>
-					<div className="mt-4 grid md:grid-cols-2 gap-4 text-sm">
-						<div>
-							<span className="text-gray-400">Material:</span>
-							<span className="text-white ml-2">Premium Cotton Blend</span>
-						</div>
-						<div>
-							<span className="text-gray-400">Care:</span>
-							<span className="text-white ml-2">Machine Wash</span>
-						</div>
-						<div>
-							<span className="text-gray-400">Fit:</span>
-							<span className="text-white ml-2">Regular Fit</span>
-						</div>
-						<div>
-							<span className="text-gray-400">Country of Origin:</span>
-							<span className="text-white ml-2">USA</span>
-						</div>
+					<p className="text-gray-300 leading-relaxed mb-4">{product.description}</p>
+					<div className="grid md:grid-cols-2 gap-4 text-sm">
+						{productDetails.map((detail) => (
+							<div key={detail.label}>
+								<span className="text-gray-400">{detail.label}:</span>
+								<span className="text-white ml-2">{detail.value}</span>
+							</div>
+						))}
 					</div>
 				</div>
 
@@ -259,16 +342,8 @@ const ProductDetailPage = () => {
 						<h2 className="text-2xl font-bold text-white mb-6">Similar Products</h2>
 						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 							{similarProducts.map((item) => (
-								<Link
-									key={item._id}
-									to={`/product/${item._id}`}
-									className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-emerald-500/50 transition-all group"
-								>
-									<img
-										src={item.image}
-										alt={item.name}
-										className="w-full h-48 object-cover group-hover:scale-110 transition-transform"
-									/>
+								<Link key={item._id} to={`/product/${item._id}`} className="bg-gray-800 rounded-lg overflow-hidden hover:shadow-lg hover:shadow-emerald-500/50 transition-all group">
+									<img src={item.image} alt={item.name} className="w-full h-48 object-cover group-hover:scale-110 transition-transform" />
 									<div className="p-3">
 										<h3 className="text-white font-semibold truncate">{item.name}</h3>
 										<p className="text-emerald-400 font-bold">₹{item.price}</p>

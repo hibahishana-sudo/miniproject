@@ -12,7 +12,19 @@ const bookingSchema = new mongoose.Schema(
 			enum: ["pending", "confirmed", "completed", "cancelled"],
 			default: "pending",
 		},
+		assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
 		totalAmount: { type: Number, required: true },
+		paymentStatus: {
+			type: String,
+			enum: ["pending", "paid", "failed"],
+			default: "pending",
+		},
+		paymentMethod: {
+			type: String,
+			enum: ["online", "cash"],
+			default: "online",
+		},
+		stripeSessionId: { type: String, default: null },
 		review: {
 			rating: { type: Number, min: 1, max: 5 },
 			comment: { type: String },

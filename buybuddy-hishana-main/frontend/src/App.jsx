@@ -5,9 +5,12 @@ import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import CategoryPage from "./pages/CategoryPage";
+import ServicesPage from "./pages/ServicesPage";
+import SubcategoryPage from "./pages/SubcategoryPage";
 import SearchPage from "./pages/SearchPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProfilePage from "./pages/ProfilePage";
+import TaskerDashboard from "./pages/TaskerDashboard";
 
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
@@ -54,12 +57,26 @@ function App() {
 					<Route path='/product/:id' element={<ProductDetailPage />} />
 					<Route path='/profile' element={user ? <ProfilePage /> : <Navigate to='/login' />} />
 					<Route path='/signup' element={!user ? <SignUpPage /> : <Navigate to='/' />} />
-					<Route path='/login' element={!user ? <LoginPage /> : <Navigate to='/' />} />
+					<Route
+						path='/login'
+						element={
+							!user ? <LoginPage /> :
+							user.role === "tasker" ? <Navigate to='/tasker-dashboard' /> :
+							user.role === "admin" ? <Navigate to='/secret-dashboard' /> :
+							<Navigate to='/' />
+						}
+					/>
 					<Route
 						path='/secret-dashboard'
 						element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
 					/>
-					<Route path='/category/:category' element={<CategoryPage />} />
+					<Route
+						path='/tasker-dashboard'
+						element={user?.role === "tasker" ? <TaskerDashboard /> : <Navigate to='/login' />}
+					/>
+					<Route path='/services' element={<ServicesPage />} />
+					<Route path='/category/:category' element={<SubcategoryPage />} />
+					<Route path='/products/:category' element={<CategoryPage />} />
 					<Route path='/cart' element={user ? <CartPage /> : <Navigate to='/login' />} />
 					<Route
 						path='/purchase-success'
